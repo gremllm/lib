@@ -4,7 +4,8 @@ const koffi = require('koffi')
 const lib = koffi.load('./build/libschema.so')
 
 // Define function signatures - using char* for auto string conversion
-const Convert = lib.func('char* Convert(char* htmlInput, int stripNav, int stripAside, int stripScript)')
+// Second param is char** (array of strings), third is int (array length)
+const Convert = lib.func('char* Convert(char* htmlInput, char** elementsToStrip, int elementsLen)')
 
 // Note: Not using Free() due to koffi memory management complexity
 // In production, you'd need a proper memory management strategy
@@ -25,8 +26,9 @@ console.log('Testing Convert()...\n')
 console.log('Input HTML:')
 console.log(htmlInput)
 
-// Call with all options enabled (strip nav, aside, script)
-const result = Convert(htmlInput, 1, 1, 1)
+// Call with empty array (use defaults)
+const elementsToStrip = []
+const result = Convert(htmlInput, elementsToStrip, elementsToStrip.length)
 
 console.log('\nOutput HTML:')
 console.log(result)
