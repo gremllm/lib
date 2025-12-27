@@ -3,7 +3,7 @@
 Test script to verify the CGO library works via Python FFI
 """
 
-from ctypes import cdll, c_char_p, c_bool
+from ctypes import cdll, c_char_p, POINTER
 import os
 
 # Load the shared library
@@ -11,7 +11,8 @@ lib_path = os.path.join(os.path.dirname(__file__), '..', '..', 'build', 'libsche
 lib = cdll.LoadLibrary(lib_path)
 
 # Set up function signatures
-lib.Convert.argtypes = [c_char_p, c_bool, c_bool, c_bool]
+from ctypes import c_int
+lib.Convert.argtypes = [c_char_p, POINTER(c_char_p), c_int]
 lib.Convert.restype = c_char_p
 
 # Test HTML
@@ -27,7 +28,9 @@ test_html = b"""<!DOCTYPE html>
 </html>"""
 
 print("Testing Convert()...")
-result = lib.Convert(test_html, True, True, True)
+strings = []
+arr = (c_char_p * len(strings))(*[s.encode('utf-8') for s in strings])
+result = lib.Convert(test_html, arr, len(strings))
 result_str = result.decode('utf-8')
 
 print("\nInput HTML:")

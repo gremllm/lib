@@ -58,7 +58,7 @@ func GremllmMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(rw, r)
 
 			// Process the HTML: strip header and footer tags using converter
-			processed, err := converter.ProcessHTML(rw.body.Bytes(), converter.StripConfig{StripNav: true, StripAside: true, StripScript: true})
+			processed, err := converter.ProcessHTML(rw.body.Bytes(), converter.StripConfig{})
 			if err != nil {
 				// If processing fails, return the original HTML
 				http.Error(w, err.Error(), http.StatusInternalServerError)

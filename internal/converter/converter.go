@@ -7,9 +7,7 @@ import (
 )
 
 type StripConfig struct {
-	StripNav    bool
-	StripAside  bool
-	StripScript bool
+	ElementsToStrip []string
 }
 
 // StripElements removes specified HTML elements from the DOM
@@ -26,9 +24,34 @@ func StripElements(n *html.Node, tags ...string) {
 
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			if c.Type == html.ElementNode && tagSet[c.Data] {
-				toRemove = append(toRemove, c)
+				shouldKeep := false
+
+				for _, attr := range c.Attr {
+					// Check for data-llm attribute, which overrides stripping
+					if attr.Key == "data-llm" && attr.Val == "keep" {
+						shouldKeep = true
+					}
+				}
+
+				// If we decided not to keep, mark for removal
+				if !shouldKeep {
+					toRemove = append(toRemove, c)
+				}
 			} else {
-				f(c) // Recurse on children
+				shouldKeep := true
+
+				for _, attr := range c.Attr {
+					// Check for data-llm attribute, which overrides stripping
+					if attr.Key == "data-llm" && attr.Val == "drop" {
+						shouldKeep = false
+					}
+				}
+
+				if !shouldKeep {
+					toRemove = append(toRemove, c)
+				} else {
+					f(c)
+				}
 			}
 		}
 
@@ -47,20 +70,13 @@ func ProcessHTML(htmlContent []byte, stripConfig StripConfig) ([]byte, error) {
 		return nil, err
 	}
 
-	// Build list of tags to strip (always include header and footer)
-	tags := []string{"header", "footer"}
-	if stripConfig.StripNav {
-		tags = append(tags, "nav")
-	}
-	if stripConfig.StripAside {
-		tags = append(tags, "aside")
-	}
-	if stripConfig.StripScript {
-		tags = append(tags, "script", "style")
-	}
+	// Add default elements to strip, if folks want to keep these they can use
+	// data-llm="keep" on them
+	elementsToStrip := stripConfig.ElementsToStrip
+	elementsToStrip = append(elementsToStrip, "header", "footer")
 
 	// Strip specified tags
-	StripElements(doc, tags...)
+	StripElements(doc, elementsToStrip...)
 
 	// Serialize back to HTML
 	var buf bytes.Buffer

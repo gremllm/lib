@@ -101,17 +101,20 @@ This generates:
 ### Using the Library from Python
 
 ```python
-from ctypes import cdll, c_char_p
+from ctypes import cdll, c_char_p, POINTER, c_int
 
 lib = cdll.LoadLibrary('./build/libschema.so')
-lib.Convert.argtypes = [c_char_p]
+lib.Convert.argtypes = [c_char_p, POINTER(c_char_p), c_int]
 lib.Convert.restype = c_char_p
 
-result = lib.Convert(b'<html><header>...</header><main>...</main></html>')
+# Convert HTML with optional elements to strip
+elements_to_strip = []
+arr = (c_char_p * len(elements_to_strip))(*[s.encode('utf-8') for s in elements_to_strip])
+result = lib.Convert(b'<html><header>...</header><main>...</main></html>', arr, len(elements_to_strip))
 print(result.decode())  # Header stripped, main content preserved
 ```
 
-See `examples/test_ffi.py` for a complete working example.
+See `ffi_tests/python/main.py` for a complete working example.
 
 ### Automated Releases
 
