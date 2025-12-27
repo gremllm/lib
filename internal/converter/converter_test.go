@@ -172,8 +172,7 @@ func TestProcessHTMLScriptWithDescription(t *testing.T) {
 		t.Error("Result still contains <script> tag")
 	}
 
-	// Note: HTML rendering may escape apostrophes as &#39;
-	if !strings.Contains(resultStr, "javascript that has the following description: Form validation for email input") {
+	if !strings.Contains(resultStr, "Javascript description: Form validation for email input") {
 		t.Errorf("Result missing script description text. Got: %s", resultStr)
 	}
 }
